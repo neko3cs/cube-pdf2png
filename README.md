@@ -2,6 +2,18 @@
 
 PDF to PNG converter using CubePDF Lib.
 
+## Download
+
+This is a dotnet-tool.
+
+```pwsh
+dotnet tool install --global convertpdf2png
+```
+
+Nuget page this.
+
+[NuGet Gallery | convertpdf2png 1.0.0](https://www.nuget.org/packages/convertpdf2png/)
+
 ## Usage
 
 ```pwsh
