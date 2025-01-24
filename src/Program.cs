@@ -1,41 +1,29 @@
-﻿using Cube.Pdf.Ghostscript;
+﻿using CubePdf2Png;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
-const string usage = "Usage: convertpdf2png <PdfFilePath> <OutputDirPath>";
-if (args.Length != 2)
+if (!CommandLineArgs.TryParse(args, out CommandLineArgs? commandLineArgs, out var errorMessage))
 {
-    Console.WriteLine(usage);
+    Console.WriteLine(errorMessage);
     return;
 }
 
-var pdfFilePath = args[0];
-var outputDirPath = args[1];
+var host = Host.CreateDefaultBuilder(args)
+    .ConfigureAppConfiguration((hostContext, config) =>
+    {
+        config.AddJsonFile("AppSettings.json", optional: true, reloadOnChange: true);
+    })
+    .ConfigureServices((hostContext, services) =>
+    {
+        services.AddHostedService<Worker>();
+        services.AddTransient(_ => commandLineArgs!);
+    })
+    .ConfigureLogging((hostContext, logging) =>
+    {
+        logging.AddConsole();
+    })
+    .Build();
 
-if (!System.IO.File.Exists(pdfFilePath))
-{
-    Console.WriteLine("Pdf file does not exist.");
-    return;
-}
-if (!pdfFilePath.EndsWith(".pdf"))
-{
-    Console.WriteLine(usage);
-    return;
-}
-if (!System.IO.Directory.Exists(outputDirPath))
-{
-    Console.WriteLine("Output directory does not exist.");
-    return;
-}
-
-var converter = new ImageConverter(Format.Png)
-{
-    Paper = Paper.Auto,
-    Orientation = Orientation.Auto,
-    Resolution = 600,
-};
-
-var pngFilePath = Path.ChangeExtension(
-    Path.Join(
-        outputDirPath,
-        Path.GetFileName(pdfFilePath)),
-    ".png");
-converter.Invoke(pdfFilePath, pngFilePath);
+await host.RunAsync();
